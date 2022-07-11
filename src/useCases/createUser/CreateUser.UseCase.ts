@@ -1,9 +1,13 @@
 import { User } from "../../entities/User";
+import { IMailProvider } from "../../providers/IMailProvider";
 import { IUserRepository } from "../../repositories/iUserRepository";
 import { iCreateUserRequestDTO } from "./CreateUserDTPO";
 
 export class CreateUserUserCase {
-  constructor(private usersRepository: IUserRepository) {}
+  constructor(
+    private usersRepository: IUserRepository,
+    private mailProvider: IMailProvider
+  ) {}
 
   async execute(data: iCreateUserRequestDTO) {
     const userAlreadyExists = await this.usersRepository.findByEmail(
@@ -17,6 +21,19 @@ export class CreateUserUserCase {
     const user = new User(data);
 
     await this.usersRepository.save(user);
+
+    this.mailProvider.sendMail({
+      to: {
+        name: data.name,
+        email: data.email,
+      },
+      from: {
+        name: "Teste aplication",
+        email: "test@email.com",
+      },
+      subject: "Welcome!",
+      body: "<p>Testando a aplicação!<p>",
+    });
   }
 }
 
